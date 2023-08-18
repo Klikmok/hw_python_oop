@@ -22,7 +22,7 @@ class Training:
     """Базовый класс тренировки."""
     LEN_STEP: float = 0.65
     M_IN_KM: float = 1000
-    H_TO_MIN: int = 60
+    H_IN_MIN: int = 60
 
     def __init__(self, action: int, duration: float, weight: float) -> None:
         self.action = action
@@ -39,6 +39,7 @@ class Training:
 
     def get_spent_calories(self) -> float:
         """Получить количество затраченных калорий."""
+        print('Вы обращаетесь к пустому методу')
         raise NotImplementedError
 
     def show_training_info(self) -> InfoMessage:
@@ -55,34 +56,32 @@ class Running(Training):
 
     def __init__(self, action: int, duration: float, weight: float) -> None:
         super().__init__(action, duration, weight)
-        self.calories = Running.get_spent_calories(self)
 
     def get_spent_calories(self) -> float:
 
         return ((self.CALORIES_MEAN_SPEED_MULTIPLIER * self.get_mean_speed()
                  + self.CALORIES_MEAN_SPEED_SHIFT) * self.weight / self.M_IN_KM
-                * (self.duration * self.H_TO_MIN))
+                * (self.duration * self.H_IN_MIN))
 
 
 class SportsWalking(Training):
     """Тренировка: спортивная ходьба."""
     CALORIES_MEAN_WEIGHT_MULTIPLIER: float = 0.035
     CALORIES_MEAN_WEIGT_SHIFT: float = 0.029
-    KMH_TO_MS: float = 0.278
-    SM_TO_M: int = 100
+    KMH_IN_MS: float = 0.278
+    CM_IN_M: int = 100
 
     def __init__(self, action: int, duration: float,
                  weight: float, height) -> None:
         super().__init__(action, duration, weight)
         self.height = height
-        self.calories = SportsWalking.get_spent_calories(self)
 
     def get_spent_calories(self) -> float:
         return ((self.CALORIES_MEAN_WEIGHT_MULTIPLIER * self.weight
-                 + ((self.get_mean_speed() * self.KMH_TO_MS)**2
-                    / (self.height / self.SM_TO_M))
+                 + ((self.get_mean_speed() * self.KMH_IN_MS)**2
+                    / (self.height / self.CM_IN_M))
                  * self.CALORIES_MEAN_WEIGT_SHIFT * self.weight)
-                * self.H_TO_MIN * self.duration)
+                * self.H_IN_MIN * self.duration)
 
 
 class Swimming(Training):
@@ -96,11 +95,9 @@ class Swimming(Training):
         super().__init__(action, duration, weight)
         self.length_pool = length_pool
         self.count_pool = count_pool
-        self.speed = Swimming.get_mean_speed(self)
-        self.calories = Swimming.get_spent_calories(self)
 
     def get_spent_calories(self) -> float:
-        return ((self.speed + self.CALORIES_MEAN_SPEED_COEFFICIENT)
+        return ((self.get_mean_speed() + self.CALORIES_MEAN_SPEED_COEFFICIENT)
                 * self.CALORIES_MEAN_WEIGHT_REFORMER * self.weight
                 * self.duration)
 
@@ -111,15 +108,12 @@ class Swimming(Training):
 
 def read_package(workout_type: str, data: list) -> Training:
     """Прочитать данные полученные от датчиков."""
-    classes: dict[str: object] = {
-        'SWM': Swimming,
-        'RUN': Running,
-        'WLK': SportsWalking,
-    }
-    if workout_type in classes:
-        return classes[workout_type](*data)
-    print('Такой тренировки нет в списке!')
-    raise ValueError
+    classes: dict[str: Training] = {'SWM': Swimming,
+                                    'RUN': Running,
+                                    'WLK': SportsWalking}
+    if workout_type not in classes:
+        raise ValueError('Такой тренировки нет в списке!')
+    return classes[workout_type](*data)
 
 
 def main(training: Training) -> None:
@@ -128,11 +122,9 @@ def main(training: Training) -> None:
 
 
 if __name__ == '__main__':
-    packages: set[str, list] = [
-        ('SWM', [720, 1, 80, 25, 40]),
-        ('RUN', [15000, 1, 75]),
-        ('WLK', [9000, 1, 75, 180]),
-    ]
+    packages: set[str, list] = [('SWM', [720, 1, 80, 25, 40]),
+                                ('RUN', [15000, 1, 75]),
+                                ('WLK', [9000, 1, 75, 180])]
 
     for workout_type, data in packages:
         training = read_package(workout_type, data)
