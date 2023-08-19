@@ -22,7 +22,7 @@ class Training:
     """Базовый класс тренировки."""
     LEN_STEP: float = 0.65
     M_IN_KM: float = 1000
-    H_IN_MIN: int = 60
+    MIN_IN_H: float = 60
 
     def __init__(self, action: int, duration: float, weight: float) -> None:
         self.action = action
@@ -39,8 +39,7 @@ class Training:
 
     def get_spent_calories(self) -> float:
         """Получить количество затраченных калорий."""
-        print('Вы обращаетесь к пустому методу')
-        raise NotImplementedError
+        raise NotImplementedError('Вы обращаетесь к пустому методу')
 
     def show_training_info(self) -> InfoMessage:
         """Вернуть информационное сообщение о выполненной тренировке."""
@@ -54,14 +53,11 @@ class Running(Training):
     CALORIES_MEAN_SPEED_SHIFT: float = 1.79
     CALORIES_MEAN_SPEED_MULTIPLIER: int = 18
 
-    def __init__(self, action: int, duration: float, weight: float) -> None:
-        super().__init__(action, duration, weight)
-
     def get_spent_calories(self) -> float:
 
         return ((self.CALORIES_MEAN_SPEED_MULTIPLIER * self.get_mean_speed()
                  + self.CALORIES_MEAN_SPEED_SHIFT) * self.weight / self.M_IN_KM
-                * (self.duration * self.H_IN_MIN))
+                * (self.duration * self.MIN_IN_H))
 
 
 class SportsWalking(Training):
@@ -69,7 +65,7 @@ class SportsWalking(Training):
     CALORIES_MEAN_WEIGHT_MULTIPLIER: float = 0.035
     CALORIES_MEAN_WEIGT_SHIFT: float = 0.029
     KMH_IN_MS: float = 0.278
-    CM_IN_M: int = 100
+    CM_IN_M: float = 100
 
     def __init__(self, action: int, duration: float,
                  weight: float, height) -> None:
@@ -81,7 +77,7 @@ class SportsWalking(Training):
                  + ((self.get_mean_speed() * self.KMH_IN_MS)**2
                     / (self.height / self.CM_IN_M))
                  * self.CALORIES_MEAN_WEIGT_SHIFT * self.weight)
-                * self.H_IN_MIN * self.duration)
+                * self.MIN_IN_H * self.duration)
 
 
 class Swimming(Training):
@@ -108,9 +104,9 @@ class Swimming(Training):
 
 def read_package(workout_type: str, data: list) -> Training:
     """Прочитать данные полученные от датчиков."""
-    classes: dict[str: Training] = {'SWM': Swimming,
-                                    'RUN': Running,
-                                    'WLK': SportsWalking}
+    classes: dict[str: type[Training]] = {'SWM': Swimming,
+                                          'RUN': Running,
+                                          'WLK': SportsWalking}
     if workout_type not in classes:
         raise ValueError('Такой тренировки нет в списке!')
     return classes[workout_type](*data)
@@ -122,9 +118,9 @@ def main(training: Training) -> None:
 
 
 if __name__ == '__main__':
-    packages: set[str, list] = [('SWM', [720, 1, 80, 25, 40]),
-                                ('RUN', [15000, 1, 75]),
-                                ('WLK', [9000, 1, 75, 180])]
+    packages: list[tuple[str, list]] = [('SWM', [720, 1, 80, 25, 40]),
+                                        ('RUN', [15000, 1, 75]),
+                                        ('WLK', [9000, 1, 75, 180])]
 
     for workout_type, data in packages:
         training = read_package(workout_type, data)
